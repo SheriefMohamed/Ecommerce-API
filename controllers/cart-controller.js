@@ -1,56 +1,60 @@
-const Cart = require("../models/cart-model");
-const _ = require("lodash");
+const User = require('../models/user-model');
 
-exports.postCart = async (req, res) => {
-  try {
-    const cart = new Cart(req.body);
-    const savedCart = await cart.save();
-    res.status(200).send(savedCart);
-  } catch (err) {
-    res.status(404).send(err);
-  }
-};
+exports.getCart = async (req,res) => {
+  const user = await User.findById(req.user.id).populate('cart.productId', 'title image price').select('username cart');
+  var totalPrice = 0;
+  user.cart.map(cartItem => {
+    totalPrice = totalPrice + (cartItem.productId.price * cartItem.quantity);
+  })
+  res.json({user,totalPrice});
+}
 
-exports.updateCart = async (req, res) => {
-  try {
-    const updatedCart = await Cart.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-      }
-    );
-    res.status(201).send(updatedCart);
-  } catch (err) {
-    res.status(404).send(err);
+exports.AddToCart = async (req,res) => {
+  const user = await User.findById(req.user.id).select('username cart');
+  if(user.cart.length == 0){
+    user.cart.push({
+      productId : req.params.productId,
+    })
+  } else {
+    const productIndex = user.cart.findIndex(i => {
+      return i.productId == req.params.productId;
+    })
+    if(productIndex == -1){
+      user.cart.push({
+        productId : req.params.productId,
+      })
+    } else {
+      const cartIndexValue = user.cart.at(productIndex);
+      user.cart.at(productIndex).quantity = cartIndexValue.quantity + 1;
+    }
   }
-};
+  await user.save()
+  res.json(user);
+}
 
-exports.deleteCart = async (req, res) => {
-  try {
-    await Cart.findByIdAndRemove(req.params.id);
-    return res.status(201).send("Cart deleted !");
-  } catch (err) {
-    res.status(404).send(err);
-  }
-};
+exports.changeQuantity = async (req,res) => {
+  const user = await User.findById(req.user.id).select('username cart');
+  const cartIndex = user.cart.findIndex(i => {
+    return i.productId == req.params.productId;
+  });
+  user.cart.at(cartIndex).quantity = req.body.quantity;
+  await user.save();
+  res.json(user);
+}
 
-exports.getCart = async (req, res) => {
-  try {
-    const cart = await Cart.findOne({
-        userId : req.params.id
-    });
-    return res.status(201).send(cart);
-  } catch (err) {
-    res.status(404).send(err);
-  }
-};
+exports.removeFromCart = async (req,res) => {
+  const user = await User.findById(req.user.id).select('username cart');
+  const newCart = user.cart.filter(cartItem => {
+    return cartItem.productId != req.params.productId;
+  })
+  user.cart = newCart;
+  await user.save();
+  res.json(user);
+}
 
-exports.getCarts = async (req, res) => {
-  try {
-    const carts = Cart.find() 
-    return res.status(201).send(carts);
-  } catch (err) {
-    res.status(404).send(err);
-  }
-};
+exports.clearCart = async (req,res) => {
+  const user = await User.findById(req.user.id).select('username cart');
+  user.cart = [];
+  await user.save();
+  res.json(user);
+}

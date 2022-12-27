@@ -6,11 +6,7 @@ const verifyUser = require('./verify-token').verifyUser
 
 router.post("/", verifyToken, orderController.postOrder);
 
-router.put("/:id", verifyToken, verifyAdmin ,orderController.updateOrder);
-
-router.delete("/:id", verifyToken, verifyAdmin ,orderController.deleteOrder);
-
-router.get("/:id",verifyToken,verifyUser,orderController.getOrder);
+router.get("/:orderId",verifyToken,orderController.getOrder);
 
 router.get("/", verifyToken, verifyAdmin ,orderController.getOrders)
 

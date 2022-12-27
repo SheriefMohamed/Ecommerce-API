@@ -1,17 +1,15 @@
 const router = require("express").Router();
 const cartController = require('../controllers/cart-controller');
 const verifyToken = require('./verify-token').verifyToken;
-const verifyAdmin = require('./verify-token').verifyAdmin;
-const verifyUser = require('./verify-token').verifyUser
 
-router.post("/", verifyToken, cartController.postCart);
+router.get('/',verifyToken, cartController.getCart);
 
-router.put("/:id", verifyToken, verifyAdmin ,cartController.updateCart);
+router.post('/add/:productId',verifyToken, cartController.AddToCart);
 
-router.delete("/:id", verifyToken, verifyAdmin ,cartController.deleteCart);
+router.post('/remove/:productId',verifyToken, cartController.removeFromCart);
 
-router.get("/:id",verifyToken,verifyUser,cartController.getCart);
+router.post('/quantity/:productId',verifyToken, cartController.changeQuantity);
 
-router.get("/", verifyToken, verifyAdmin ,cartController.getCarts)
+router.post('/clear',verifyToken, cartController.clearCart);
 
 module.exports = router;

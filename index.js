@@ -1,10 +1,15 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const passport = require("passport");
 require("dotenv/config");
+const cors = require('cors')
 
 const app = express();
 
+app.use(cors())
+
 app.use(require("body-parser").json());
+app.use(require("body-parser").urlencoded({ extended: false }));
 
 app.use("/api/auth", require('./routes/auth-route'));
 app.use("/api/users", require('./routes/user-route'));
@@ -22,10 +27,3 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
-
-  /*
-    "_id" :"634ea9c5cf914418d21a2ca8", 
-    "username": "Sherief",
-    "email": "sherief@x.com",
-    "password": "$2a$12$3hMOswPI8LwhCkERKqb9V.bWBKCiChhguSXNyheVZORlqEPmgR1lG",
-    "isAdmin": false, */

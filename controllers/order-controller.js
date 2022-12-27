@@ -1,35 +1,27 @@
+const User = require("../models/user-model");
 const Order = require("../models/Order-model");
 const _ = require("lodash");
 
 exports.postOrder = async (req, res) => {
   try {
-    const order = new Order(req.body);
-    const savedOrder = await order.save();
-    res.status(200).send(savedOrder);
-  } catch (err) {
-    res.status(404).send(err);
-  }
-};
-
-exports.updateOrder = async (req, res) => {
-  try {
-    const updatedOrder = await Order.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-      }
-    );
-    res.status(201).send(updatedOrder);
-  } catch (err) {
-    res.status(404).send(err);
-  }
-};
-
-exports.deleteOrder = async (req, res) => {
-  try {
-    await Order.findByIdAndRemove(req.params.id);
-    return res.status(201).send("Order deleted !");
+    const user = await User.findById(req.user.id)
+      .populate("cart.productId", "price")
+      .select("username cart address orders");
+    var totalPrice = 0;
+    user.cart.map((cartItem) => {
+      totalPrice = totalPrice + cartItem.productId.price * cartItem.quantity;
+    });
+    const order = new Order({
+      userId: user._id,
+      products: [...user.cart],
+      totalPrice: totalPrice,
+      address: user.address,
+    });
+    const uploadedOrder = await order.save();
+    user.orders.push(uploadedOrder);
+    user.cart = [];
+    await user.save();
+    res.json(uploadedOrder);
   } catch (err) {
     res.status(404).send(err);
   }
@@ -37,10 +29,13 @@ exports.deleteOrder = async (req, res) => {
 
 exports.getOrder = async (req, res) => {
   try {
-    const order = await Order.find({
-        userId : req.params.id
-    });
-    return res.status(201).send(order);
+    const user = await User.findById(req.user.id)
+      .populate("orders", "products totalPrice address status")
+      .select("username orders");
+    const neededOrder = user.orders.filter(order => {
+      return order._id == req.params.orderId
+    })
+    return res.status(201).send(neededOrder);
   } catch (err) {
     res.status(404).send(err);
   }
@@ -48,8 +43,10 @@ exports.getOrder = async (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    const orders = Order.find() 
-    return res.status(201).send(orders);
+    const user = await User.findById(req.user.id)
+      .populate("orders", "products totalPrice address status")
+      .select("username orders");
+    return res.status(201).send(user);
   } catch (err) {
     res.status(404).send(err);
   }
