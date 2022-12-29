@@ -12,6 +12,7 @@ exports.postProduct = async (req, res) => {
         "size",
         "color",
         "price",
+        "qty"
       ])
     );
     const savedProduct = await product.save();

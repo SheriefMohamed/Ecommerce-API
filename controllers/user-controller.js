@@ -26,7 +26,7 @@ exports.deleteUser = async (req,res) => {
 
 exports.getUser = async (req,res) => {
     try{
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).select("-password -__v");
         return res.status(201).send(user);        
     } catch (err){
         res.status(404).send(err)
@@ -35,7 +35,7 @@ exports.getUser = async (req,res) => {
 
 exports.getUsers = async (req,res) => {
     try{
-        const users = await User.find();
+        const users = await User.find().select("-password -__v");
         return res.status(201).send(users);        
     } catch (err){
         res.status(404).send(err)

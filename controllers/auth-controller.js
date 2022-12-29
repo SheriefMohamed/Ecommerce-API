@@ -19,6 +19,7 @@ exports.postSignup = async (req, res) => {
     const user = new User({
       username: req.body.username,
       email: req.body.email,
+      address : req.body.address,
       password: await bcrypt.hash(req.body.password, 12),
     });
     const savedUser = await user.save();

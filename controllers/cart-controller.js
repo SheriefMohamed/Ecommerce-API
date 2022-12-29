@@ -4,7 +4,9 @@ exports.getCart = async (req,res) => {
   const user = await User.findById(req.user.id).populate('cart.productId', 'title image price').select('username cart');
   var totalPrice = 0;
   user.cart.map(cartItem => {
-    totalPrice = totalPrice + (cartItem.productId.price * cartItem.quantity);
+    if(cartItem.productId!=null){
+      totalPrice = totalPrice + (cartItem.productId.price * cartItem.quantity);
+    }
   })
   res.json({user,totalPrice});
 }
