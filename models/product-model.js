@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 const productSchema = mongoose.Schema({
     title : {
         type : String,
@@ -9,10 +10,7 @@ const productSchema = mongoose.Schema({
         type : String,
         required : true
     },
-    image : {
-        type : String,
-        required : true
-    },
+    images : [{ type: Schema.Types.ObjectId, ref: "Images" }],
     category : {
         type : Array,
     },

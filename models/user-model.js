@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
+const joi = require("joi");
+const { joiPasswordExtendCore } = require('joi-password');
+const joiPassword = joi.extend(joiPasswordExtendCore);
 const Schema = mongoose.Schema;
-const userSchema = mongoose.Schema(
+const User = mongoose.Schema(
   {
     username: {
       type: String,
@@ -48,4 +51,19 @@ const userSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
+// module.exports = mongoose.model("User", User);
+const userSchema = mongoose.model("User", User);
+
+function userValidation(user) {
+  const schema = joi.object({
+    username: joi.string().trim().max(255).required(),
+    email: joi.string().trim().max(255).email().lowercase().required(),
+    password: joiPassword.string().minOfSpecialCharacters(1).minOfLowercase(1).minOfUppercase(1).minOfNumeric(1).trim().min(12).required(),
+    address: joi.string().trim().max(255).required()
+  });
+
+  return schema.validate(user);
+}
+
+exports.validate = userValidation;
+exports.User = userSchema;

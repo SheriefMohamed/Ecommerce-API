@@ -1,4 +1,4 @@
-const User = require("../models/user-model");
+const { User, validate } = require("../models/user-model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv/config");
@@ -14,8 +14,12 @@ const transporter = nodemailer.createTransport(
   })
 );
 
-exports.postSignup = async (req, res) => {
+exports.postSignup = async (req, res, next) => {
   try {
+    const { error } = validate(req.body);
+    if (error) {
+      return res.status(400).send(error.details[0].message);
+    }
     const user = new User({
       username: req.body.username,
       email: req.body.email,
@@ -25,33 +29,43 @@ exports.postSignup = async (req, res) => {
     const savedUser = await user.save();
     return res.status(200).send(savedUser);
   } catch (err) {
-    return res.status(500).send(err);
-  }
-};
-
-exports.postLogin = async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
-  if (!user) {
-    return res.status(404).send("Wrong email or password !");
-  }
-  const isEqual = await bcrypt.compare(req.body.password, user.password);
-  if (!isEqual) {
-    return res.status(404).send("Wrong email or password !");
-  }
-  const token = jwt.sign(
-    {
-      id: user._id,
-      isAdmin: user.isAdmin,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "3d",
+    if (!err.statusCode) {
+      err.statusCode = 500;
     }
-  );
-  return res.status(200).send(token);
+    next(err);
+  }
 };
 
-exports.postReset = async (req, res) => {
+exports.postLogin = async (req, res, next) => {
+  try { 
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(404).send("Wrong email or password !");
+    }
+    const isEqual = await bcrypt.compare(req.body.password, user.password);
+    if (!isEqual) {
+      return res.status(404).send("Wrong email or password !");
+    }
+    const token = jwt.sign(
+      {
+        id: user._id,
+        isAdmin: user.isAdmin,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "3d",
+      }
+    );
+    return res.status(200).send(token);
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.postReset = async (req, res, next) => {
   try {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
@@ -71,13 +85,15 @@ exports.postReset = async (req, res) => {
       `
     });
     return res.status(200).send("Check your mail !")
-  } catch(err) {
-    res.send(err);
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
   }
 }
 
-exports.postResetNewPassword = async (req, res) => {
-  console.log("there")
+exports.postResetNewPassword = async (req, res, next) => {
   try {
     const user = await User.findOne({resetToken : req.body.token, resetTokenExpiration: { $gt: Date.now() }})
     if(!user){
@@ -88,7 +104,10 @@ exports.postResetNewPassword = async (req, res) => {
     user.resetTokenExpiration = undefined;
     const updatedUser = await user.save();
     return res.status(200).send(updatedUser);
-  } catch(err) {
-    res.send(err)
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
   }
 }

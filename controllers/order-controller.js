@@ -1,8 +1,7 @@
-const User = require("../models/user-model");
+const { User } = require("../models/user-model");
 const Order = require("../models/Order-model");
-const _ = require("lodash");
 
-exports.postOrder = async (req, res) => {
+exports.postOrder = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
       .populate("cart.productId", "price qty title")
@@ -37,11 +36,14 @@ exports.postOrder = async (req, res) => {
       return res.json(messagesValue);
     }
   } catch (err) {
-    res.status(404).send(err);
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
   }
 };
 
-exports.getOrder = async (req, res) => {
+exports.getOrder = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
       .populate("orders", "products totalPrice address status")
@@ -51,17 +53,23 @@ exports.getOrder = async (req, res) => {
     });
     return res.status(201).send(neededOrder);
   } catch (err) {
-    res.status(404).send(err);
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
   }
 };
 
-exports.getOrders = async (req, res) => {
+exports.getOrders = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
       .populate("orders", "products totalPrice address status")
       .select("username orders");
     return res.status(201).send(user);
   } catch (err) {
-    res.status(404).send(err);
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
   }
 };

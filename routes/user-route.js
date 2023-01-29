@@ -8,7 +8,7 @@ router.put("/:id", verifyToken ,verifyUser ,userController.updateUser)
 
 router.delete("/:id", verifyToken ,verifyUser ,userController.deleteUser)
 
-router.get("/:id", verifyToken ,verifyAdmin ,userController.getUser)
+router.get("/:id", verifyToken ,userController.getUser)
 
 router.get("/",verifyToken ,verifyAdmin ,userController.getUsers)
 
