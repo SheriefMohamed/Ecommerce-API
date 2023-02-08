@@ -51,7 +51,6 @@ const User = mongoose.Schema(
   { timestamps: true }
 );
 
-// module.exports = mongoose.model("User", User);
 const userSchema = mongoose.model("User", User);
 
 function userValidation(user) {
